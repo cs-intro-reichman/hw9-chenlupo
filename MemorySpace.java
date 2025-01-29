@@ -87,17 +87,16 @@ public class MemorySpace {
 	 *            the starting address of the block to freeList
 	 */
 	public void free(int address) {
-		if (allocatedList.getSize() == 0) return; // No allocated memory to free
-
-		for (int i = 0; i < allocatedList.getSize(); i++) {
-			MemoryBlock allocatedBlock = allocatedList.getBlock(i);
-
-			if (allocatedBlock.baseAddress == address) {
-				allocatedList.remove(i);
-				freeList.addLast(allocatedBlock);
-				return;
-			}
+		if (allocatedList.getSize()==0){
+			throw new IllegalArgumentException("index must be between 0 and size");
 		}
+		for (int i = 0; i < allocatedList.getSize(); i++) {
+            MemoryBlock allocatedBlock = allocatedList.getBlock(i);
+            if (allocatedBlock.baseAddress == address) {
+                allocatedList.remove(i);
+                freeList.addLast(allocatedBlock);
+            }
+        }
 	}
 	
 	/**
@@ -115,17 +114,28 @@ public class MemorySpace {
 	 */
 	public void defrag() {
 		for (int i = 0; i < freeList.getSize() - 1; i++) {
-			for (int j = i + 1; j < freeList.getSize(); j++) {
-				MemoryBlock block1 = freeList.getBlock(i);
-				MemoryBlock block2 = freeList.getBlock(j);
+            for (int j = i + 1; j < freeList.getSize(); j++) {
+                MemoryBlock block1 = freeList.getBlock(i);
+                MemoryBlock block2 = freeList.getBlock(j);
 
-				if (block1.baseAddress > block2.baseAddress) {
-					freeList.remove(j);
-					freeList.remove(i);
-					freeList.add(i, block2);
-					freeList.add(j, block1);
-				}
-			}
+                if (block1.baseAddress > block2.baseAddress) {
+                    freeList.remove(j);
+                    freeList.remove(i);
+                    freeList.add(i, block2);
+                    freeList.add(j, block1);
+                }
+            }
+        }
+
+        for (int i = 0; i < freeList.getSize() - 1; i++) {
+            MemoryBlock current = freeList.getBlock(i);
+            MemoryBlock next = freeList.getBlock(i + 1);
+
+            if (current.baseAddress + current.length == next.baseAddress) {
+                current.length += next.length;
+                freeList.remove(i + 1);
+                i--; 
+            }
+        }
 	}
-}
 }
