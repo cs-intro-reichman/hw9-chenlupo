@@ -58,7 +58,23 @@ public class MemorySpace {
 	 * @return the base address of the allocated block, or -1 if unable to allocate
 	 */
 	public int malloc(int length) {		
-		//// Replace the following statement with your code
+		for (int i = 0; i < freeList.getSize(); i++) {
+			MemoryBlock freeBlock = freeList.getBlock(i);
+
+			if (freeBlock.length >= length) {
+				int allocatedAddress = freeBlock.baseAddress;
+				MemoryBlock allocatedBlock = new MemoryBlock(allocatedAddress, length);
+				allocatedList.addLast(allocatedBlock);
+
+				if (freeBlock.length == length) {
+					freeList.remove(i);
+				} else {
+					freeBlock.baseAddress += length;
+					freeBlock.length -= length;
+				}
+				return allocatedAddress;
+			}
+		}
 		return -1;
 	}
 
@@ -71,7 +87,17 @@ public class MemorySpace {
 	 *            the starting address of the block to freeList
 	 */
 	public void free(int address) {
-		//// Write your code here
+		if (allocatedList.getSize() == 0) return; // No allocated memory to free
+
+		for (int i = 0; i < allocatedList.getSize(); i++) {
+			MemoryBlock allocatedBlock = allocatedList.getBlock(i);
+
+			if (allocatedBlock.baseAddress == address) {
+				allocatedList.remove(i);
+				freeList.addLast(allocatedBlock);
+				return;
+			}
+		}
 	}
 	
 	/**
@@ -79,7 +105,7 @@ public class MemorySpace {
 	 * for debugging purposes.
 	 */
 	public String toString() {
-		return freeList.toString() + "\n" + allocatedList.toString();		
+		return freeList.toString() + "\n" + allocatedList.toString();	
 	}
 	
 	/**
@@ -88,6 +114,18 @@ public class MemorySpace {
 	 * In this implementation Malloc does not call defrag.
 	 */
 	public void defrag() {
-		//// Write your code here
+		for (int i = 0; i < freeList.getSize() - 1; i++) {
+			for (int j = i + 1; j < freeList.getSize(); j++) {
+				MemoryBlock block1 = freeList.getBlock(i);
+				MemoryBlock block2 = freeList.getBlock(j);
+
+				if (block1.baseAddress > block2.baseAddress) {
+					freeList.remove(j);
+					freeList.remove(i);
+					freeList.add(i, block2);
+					freeList.add(j, block1);
+				}
+			}
 	}
+}
 }
